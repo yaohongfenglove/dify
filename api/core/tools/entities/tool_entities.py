@@ -111,7 +111,8 @@ class ToolInvokeMessage(BaseModel):
         plain text, image url or link url
     """
     message: str | bytes | dict | None = None
-    meta: dict[str, Any] | None = None
+    # TODO: Use a BaseModel for meta
+    meta: dict[str, Any] = Field(default_factory=dict)
     save_as: str = ""
 
 

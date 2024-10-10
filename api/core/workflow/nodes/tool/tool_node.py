@@ -165,17 +165,16 @@ class ToolNode(BaseNode[ToolNodeData]):
         Extract tool response binary
         """
         result = []
-
         for response in tool_response:
             if response.type in {ToolInvokeMessage.MessageType.IMAGE_LINK, ToolInvokeMessage.MessageType.IMAGE}:
                 url = response.message
                 ext = path.splitext(url)[1]
                 mimetype = response.meta.get("mime_type", "image/jpeg")
-                filename = response.save_as or url.split("/")[-1]
+                tool_file_id = response.save_as or url.split("/")[-1]
                 transfer_method = response.meta.get("transfer_method", FileTransferMethod.TOOL_FILE)
 
                 # get tool file id
-                tool_file_id = url.split("/")[-1].split(".")[0]
+                tool_file_id = str(url).split("/")[-1].split(".")[0]
                 result.append(
                     File(
                         tenant_id=self.tenant_id,
@@ -183,14 +182,14 @@ class ToolNode(BaseNode[ToolNodeData]):
                         transfer_method=transfer_method,
                         remote_url=url,
                         related_id=tool_file_id,
-                        filename=filename,
+                        filename=tool_file_id,
                         extension=ext,
                         mime_type=mimetype,
                     )
                 )
             elif response.type == ToolInvokeMessage.MessageType.BLOB:
                 # get tool file id
-                tool_file_id = response.message.split("/")[-1].split(".")[0]
+                tool_file_id = str(response.message).split("/")[-1].split(".")[0]
                 result.append(
                     File(
                         tenant_id=self.tenant_id,
@@ -203,7 +202,26 @@ class ToolNode(BaseNode[ToolNodeData]):
                     )
                 )
             elif response.type == ToolInvokeMessage.MessageType.LINK:
-                pass  # TODO:
+                url = str(response.message)
+                transfer_method = FileTransferMethod.TOOL_FILE
+                mimetype = response.meta.get("mime_type", "application/octet-stream")
+                tool_file_id = url.split("/")[-1].split(".")[0]
+                if "." in url:
+                    extension = "." + url.split("/")[-1].split(".")[1]
+                else:
+                    extension = ".bin"
+                file = File(
+                    tenant_id=self.tenant_id,
+                    type=FileType(response.save_as),
+                    transfer_method=transfer_method,
+                    remote_url=url,
+                    filename=tool_file_id,
+                    related_id=tool_file_id,
+                    extension=extension,
+                    mime_type=mimetype,
+                )
+                result.append(file)
+
             elif response.type == ToolInvokeMessage.MessageType.FILE:
                 assert response.meta is not None
                 result.append(response.meta["file"])

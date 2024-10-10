@@ -64,6 +64,10 @@ class Tool(BaseModel, ABC):
 
     class VariableKey(str, Enum):
         IMAGE = "image"
+        DOCUMENT = "document"
+        VIDEO = "video"
+        AUDIO = "audio"
+        CUSTOM = "custom"
 
     def fork_tool_runtime(self, runtime: dict[str, Any]) -> "Tool":
         """
