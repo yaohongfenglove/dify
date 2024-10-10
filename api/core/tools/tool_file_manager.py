@@ -82,6 +82,7 @@ class ToolFileManager:
 
         db.session.add(tool_file)
         db.session.commit()
+        db.session.refresh(tool_file)
 
         return tool_file
 
