@@ -392,7 +392,7 @@ class AuthConfig(BaseSettings):
 
     ACCESS_TOKEN_EXPIRE_MINUTES: PositiveInt = Field(
         description="Expiration time for access tokens in minutes",
-        default=60,
+        default=8,
     )
 
 
