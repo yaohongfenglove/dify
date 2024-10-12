@@ -628,6 +628,7 @@ class DatasetRetrievalSettingApi(Resource):
                 | VectorType.ORACLE
                 | VectorType.ELASTICSEARCH
                 | VectorType.PGVECTOR
+                | VectorType.TIDB_ON_QDRANT
             ):
                 return {
                     "retrieval_method": [
