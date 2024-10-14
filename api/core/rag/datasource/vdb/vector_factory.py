@@ -114,6 +114,14 @@ class Vector:
                 from core.rag.datasource.vdb.analyticdb.analyticdb_vector import AnalyticdbVectorFactory
 
                 return AnalyticdbVectorFactory
+            case VectorType.BAIDU:
+                from core.rag.datasource.vdb.baidu.baidu_vector import BaiduVectorFactory
+
+                return BaiduVectorFactory
+            case VectorType.VIKINGDB:
+                from core.rag.datasource.vdb.vikingdb.vikingdb_vector import VikingDBVectorFactory
+
+                return VikingDBVectorFactory
             case VectorType.TIDB_ON_QDRANT:
                 from core.rag.datasource.vdb.tidb_on_qdrant.tidb_on_qdrant_vector import TidbOnQdrantVectorFactory
 

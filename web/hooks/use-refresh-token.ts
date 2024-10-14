@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef } from 'react'
 import { jwtDecode } from 'jwt-decode'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
+import { useRouter } from 'next/navigation'
 import type { CommonResponse } from '@/models/common'
 import { fetchNewToken } from '@/service/common'
 import { fetchWithRetry } from '@/utils'
@@ -10,8 +11,9 @@ import { fetchWithRetry } from '@/utils'
 dayjs.extend(utc)
 
 const useRefreshToken = () => {
+  const router = useRouter()
   const timer = useRef<NodeJS.Timeout>()
-  const advanceTime = useRef<number>(7 * 60 * 1000)
+  const advanceTime = useRef<number>(5 * 60 * 1000)
 
   const getExpireTime = useCallback((token: string) => {
     if (!token)
@@ -28,11 +30,22 @@ const useRefreshToken = () => {
     localStorage?.removeItem('is_refreshing')
     localStorage?.removeItem('console_token')
     localStorage?.removeItem('refresh_token')
+    router.replace('/signin')
   }, [])
 
-  const getNewAccessToken = useCallback(async (currentAccessToken: string, currentRefreshToken: string) => {
-    if (localStorage?.getItem('is_refreshing') === '1')
+  const getNewAccessToken = useCallback(async () => {
+    const currentAccessToken = localStorage?.getItem('console_token')
+    const currentRefreshToken = localStorage?.getItem('refresh_token')
+    if (!currentAccessToken || !currentRefreshToken) {
+      handleError()
+      return new Error('No access token or refresh token found')
+    }
+    if (localStorage?.getItem('is_refreshing') === '1') {
+      timer.current = setTimeout(() => {
+        getNewAccessToken()
+      }, 1000)
       return null
+    }
     const currentTokenExpireTime = getExpireTime(currentAccessToken)
     if (getCurrentTimeStamp() + advanceTime.current > currentTokenExpireTime) {
       localStorage?.setItem('is_refreshing', '1')
@@ -49,19 +62,13 @@ const useRefreshToken = () => {
       localStorage?.setItem('refresh_token', refresh_token)
       const newTokenExpireTime = getExpireTime(access_token)
       timer.current = setTimeout(() => {
-        const consoleTokenFromLocalStorage = localStorage?.getItem('console_token')
-        const refreshTokenFromLocalStorage = localStorage?.getItem('refresh_token')
-        if (consoleTokenFromLocalStorage && refreshTokenFromLocalStorage)
-          getNewAccessToken(consoleTokenFromLocalStorage, refreshTokenFromLocalStorage)
+        getNewAccessToken()
       }, newTokenExpireTime - advanceTime.current - getCurrentTimeStamp())
     }
     else {
       const newTokenExpireTime = getExpireTime(currentAccessToken)
       timer.current = setTimeout(() => {
-        const consoleTokenFromLocalStorage = localStorage?.getItem('console_token')
-        const refreshTokenFromLocalStorage = localStorage?.getItem('refresh_token')
-        if (consoleTokenFromLocalStorage && refreshTokenFromLocalStorage)
-          getNewAccessToken(consoleTokenFromLocalStorage, refreshTokenFromLocalStorage)
+        getNewAccessToken()
       }, newTokenExpireTime - advanceTime.current - getCurrentTimeStamp())
     }
     return null

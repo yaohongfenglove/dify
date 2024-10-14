@@ -14,33 +14,31 @@ const SwrInitor = ({
 }: SwrInitorProps) => {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { getNewAccessToken } = useRefreshToken()
   const consoleToken = searchParams.get('access_token')
   const refreshToken = searchParams.get('refresh_token')
   const consoleTokenFromLocalStorage = localStorage?.getItem('console_token')
   const refreshTokenFromLocalStorage = localStorage?.getItem('refresh_token')
   const [init, setInit] = useState(false)
-  const { getNewAccessToken } = useRefreshToken()
 
   useEffect(() => {
     if (!(consoleToken || refreshToken || consoleTokenFromLocalStorage || refreshTokenFromLocalStorage)) {
       router.replace('/signin')
       return
     }
-    if (consoleTokenFromLocalStorage && refreshTokenFromLocalStorage) {
-      getNewAccessToken(consoleTokenFromLocalStorage, refreshTokenFromLocalStorage).catch(() => {
-        router.replace('/signin')
-      })
-    }
+    if (consoleTokenFromLocalStorage && refreshTokenFromLocalStorage)
+      getNewAccessToken()
 
     if (consoleToken && refreshToken) {
       localStorage.setItem('console_token', consoleToken)
       localStorage.setItem('refresh_token', refreshToken)
-      getNewAccessToken(consoleToken, refreshToken).catch(() => {
+      getNewAccessToken().then(() => {
+        router.replace('/apps', { forceOptimisticNavigation: false } as any)
+      }).catch(() => {
         router.replace('/signin')
       })
     }
 
-    router.replace('/apps', { forceOptimisticNavigation: false } as any)
     setInit(true)
   }, [])
 
